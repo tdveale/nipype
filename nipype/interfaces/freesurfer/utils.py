@@ -706,8 +706,7 @@ class Surf2SurfInputSpec(FSTraitedSpec):
     reshape_factor = traits.Int(
         argstr="--reshape-factor", desc="number of slices in reshaped image"
     )
-    out_file = File(argstr="--tval %s", mandatory=True, genfile=True, desc="surface file to write",
-    )
+    out_file = File(argstr="--tval %s", mandatory=True, genfile=True, desc="surface file to write")
 
 
 class Surf2SurfOutputSpec(TraitedSpec):
@@ -729,12 +728,14 @@ class Surf2Surf(FSCommand):
     --------
 
     # >>> from nipype.interfaces.freesurfer import Surf2Surf
-    # >>> sxfm = SurfaceTransform()
-    # >>> sxfm.inputs.source_surf = "lh.white"
-    # >>> sxfm.inputs.source_subject = "my_subject"
-    # >>> sxfm.inputs.target_vol = "fsaverage"
-    # >>> sxfm.inputs.hemi = "lh"
-    # >>> sxfm.run() # doctest: +SKIP
+    # >>> s2f = SurfaceTransform()
+    # >>> s2f.inputs.source_surf = "white"
+    # >>> s2f.inputs.source_subject = "my_subject"
+    # >>> s2f.inputs.target_vol = "dwi.nii.gz"
+    # >>> s2f.inputs.reg_file = "dwi2fs.dat"
+    # >>> s2f.inputs.hemi = "lh"
+    # >>> s2f.inputs.tval = "white.dwi"
+    # >>> s2f.run() # doctest: +SKIP
 
     """
 
