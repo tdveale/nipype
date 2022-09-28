@@ -669,6 +669,156 @@ class SurfaceTransform(FSCommand):
             return self._list_outputs()[name]
         return None
 
+class Surf2SurfInputSpec(FSTraitedSpec):
+    source_surf = File(
+        exists=True,
+        mandatory=True,
+        argstr="--sval-xyz %s",
+        desc="original surface ('white' or 'pial')",
+    )
+    reg_file= File(
+        exists=True,
+        mandatory=True,
+        argstr="--reg %s",
+        desc="registration file between target_vol <> source_subject",
+    )
+    source_subject = traits.String(
+        mandatory=True, argstr="--srcsubject %s", desc="subject id for source surface"
+    )
+    hemi = traits.Enum(
+        "lh", "rh", argstr="--hemi %s", mandatory=True, desc="hemisphere to transform"
+    )
+    target_vol = traits.String(
+        mandatory=True, argstr="--tval-xyz %s", desc="target volume in another space"
+    )
+    source_type = traits.Enum(
+        filetypes,
+        argstr="--sfmt %s",
+        requires=["source_file"],
+        desc="source file format",
+    )
+    target_type = traits.Enum(
+        filetypes + implicit_filetypes, argstr="--tfmt %s", desc="output format"
+    )
+    reshape = traits.Bool(
+        argstr="--reshape", desc="reshape output surface to conform with Nifti"
+    )
+    reshape_factor = traits.Int(
+        argstr="--reshape-factor", desc="number of slices in reshaped image"
+    )
+    out_file = File(argstr="--tval %s", mandatory=True, genfile=True, desc="surface file to write",
+    )
+
+
+class Surf2SurfOutputSpec(TraitedSpec):
+    out_file = File(exists=True, desc="transformed surface file")
+
+
+class Surf2Surf(FSCommand):
+    """Transform a subject's surface file from one space to another (e.g. intra-subject and cross-modal).
+
+    Requires recon-all output and a *.dat file from BBRegister.
+
+    bash equivalent trying to emulate:
+    mri_surf2surf --reg b02orig.dat --hemi ${ihemi} --sval-xyz white \
+        --tval-xyz ${dwi_file} --tval ${fs_dir}/surf/${ihemi}.white.dwi --s ${subj_id}
+    
+    See example .4 in mri_surf2surf --help
+    
+    Examples
+    --------
+
+    # >>> from nipype.interfaces.freesurfer import Surf2Surf
+    # >>> sxfm = SurfaceTransform()
+    # >>> sxfm.inputs.source_surf = "lh.white"
+    # >>> sxfm.inputs.source_subject = "my_subject"
+    # >>> sxfm.inputs.target_vol = "fsaverage"
+    # >>> sxfm.inputs.hemi = "lh"
+    # >>> sxfm.run() # doctest: +SKIP
+
+    """
+
+    _cmd = "mri_surf2surf"
+    input_spec = Surf2SurfInputSpec
+    output_spec = Surf2SurfOutputSpec
+
+    def _format_arg(self, name, spec, value):
+        if name == "target_type":
+            if isdefined(self.inputs.out_file):
+                _, base, ext = split_filename(self._list_outputs()["out_file"])
+                if ext != filemap[value]:
+                    if ext in filemap.values():
+                        raise ValueError(
+                            "Cannot create {} file with extension "
+                            "{}".format(value, ext)
+                        )
+                    else:
+                        logger.warning(
+                            "Creating %s file with extension %s: %s%s",
+                            value,
+                            ext,
+                            base,
+                            ext,
+                        )
+            if value in implicit_filetypes:
+                return ""
+        return super(Surf2Surf, self)._format_arg(name, spec, value)
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs["out_file"] = self.inputs.out_file
+        if not isdefined(outputs["out_file"]):
+            if isdefined(self.inputs.source_file):
+                source = self.inputs.source_file
+            else:
+                source = self.inputs.source_annot_file
+
+            # Some recon-all files don't have a proper extension (e.g. "lh.thickness")
+            # so we have to account for that here
+            bad_extensions = [
+                ".%s" % e
+                for e in [
+                    "area",
+                    "mid",
+                    "pial",
+                    "avg_curv",
+                    "curv",
+                    "inflated",
+                    "jacobian_white",
+                    "orig",
+                    "nofix",
+                    "smoothwm",
+                    "crv",
+                    "sphere",
+                    "sulc",
+                    "thickness",
+                    "volume",
+                    "white",
+                ]
+            ]
+            use_ext = True
+            if split_filename(source)[2] in bad_extensions:
+                source = source + ".stripme"
+                use_ext = False
+            ext = ""
+            if isdefined(self.inputs.target_type):
+                ext = "." + filemap[self.inputs.target_type]
+                use_ext = False
+            outputs["out_file"] = fname_presuffix(
+                source,
+                suffix=".%s%s" % (self.inputs.target_subject, ext),
+                newpath=os.getcwd(),
+                use_ext=use_ext,
+            )
+        else:
+            outputs["out_file"] = os.path.abspath(self.inputs.out_file)
+        return outputs
+
+    def _gen_filename(self, name):
+        if name == "out_file":
+            return self._list_outputs()[name]
+        return None
+
 
 class Surface2VolTransformInputSpec(FSTraitedSpec):
     source_file = File(
