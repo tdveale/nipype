@@ -728,7 +728,7 @@ class Surf2Surf(FSCommand):
     --------
 
     # >>> from nipype.interfaces.freesurfer import Surf2Surf
-    # >>> s2f = SurfaceTransform()
+    # >>> s2f = Surf2Surf()
     # >>> s2f.inputs.source_surf = "white"
     # >>> s2f.inputs.source_subject = "my_subject"
     # >>> s2f.inputs.target_vol = "dwi.nii.gz"
