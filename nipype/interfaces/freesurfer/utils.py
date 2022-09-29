@@ -694,7 +694,7 @@ class Surf2SurfInputSpec(FSTraitedSpec):
     source_type = traits.Enum(
         filetypes,
         argstr="--sfmt %s",
-        requires=["source_file"],
+        requires=["source_surf"],
         desc="source file format",
     )
     target_type = traits.Enum(
@@ -734,7 +734,7 @@ class Surf2Surf(FSCommand):
     # >>> s2f.inputs.target_vol = "dwi.nii.gz"
     # >>> s2f.inputs.reg_file = "dwi2fs.dat"
     # >>> s2f.inputs.hemi = "lh"
-    # >>> s2f.inputs.tval = "white.dwi"
+    # >>> s2f.inputs.out_file = "white.dwi"
     # >>> s2f.run() # doctest: +SKIP
 
     """
@@ -769,8 +769,8 @@ class Surf2Surf(FSCommand):
         outputs = self._outputs().get()
         outputs["out_file"] = self.inputs.out_file
         if not isdefined(outputs["out_file"]):
-            if isdefined(self.inputs.source_file):
-                source = self.inputs.source_file
+            if isdefined(self.inputs.source_surf):
+                source = self.inputs.source_surf
             else:
                 source = self.inputs.source_annot_file
 
