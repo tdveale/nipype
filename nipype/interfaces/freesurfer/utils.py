@@ -807,7 +807,7 @@ class Surf2Surf(FSCommand):
                 use_ext = False
             outputs["out_file"] = fname_presuffix(
                 source,
-                suffix=".%s%s" % (self.inputs.target_subject, ext),
+                suffix=".%s%s" % (self.inputs.source_subject, ext),
                 newpath=os.getcwd(),
                 use_ext=use_ext,
             )
