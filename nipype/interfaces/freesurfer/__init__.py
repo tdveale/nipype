@@ -48,6 +48,7 @@ from .utils import (
     SampleToSurface,
     SurfaceSmooth,
     SurfaceTransform,
+    Surf2Surf,
     Surface2VolTransform,
     SurfaceSnapshots,
     ApplyMask,
